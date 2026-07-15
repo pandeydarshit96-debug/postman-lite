@@ -23,25 +23,25 @@ A lightweight, browser-based API testing platform — a simplified alternative t
 
 ## Tech Stack
 
-| Layer    | Technology              |
-|----------|-------------------------|
-| Frontend | HTML, CSS, JavaScript   |
-| Backend  | Node.js + Express.js    |
-| Storage  | localStorage (no DB)    |
-| HTTP     | Axios (server-side)     |
+| Layer    | Technology            |
+|----------|-----------------------|
+| Frontend | HTML, CSS, JavaScript |
+| Backend  | Node.js + Express.js  |
+| Storage  | localStorage (no DB)  |
+| HTTP     | Axios (server-side)   |
 
 ---
 
 ## Project Structure
 
 ```
-fourth postman/
+postman-lite/
 ├── index.html        # Main UI
 ├── style.css         # All styles
 ├── app.js            # Frontend logic
-├── server/
-│   ├── index.js      # Express proxy server
-│   └── package.json  # Backend dependencies
+├── index.js          # Express proxy server (backend)
+├── package.json      # Backend dependencies
+├── .gitignore
 └── README.md
 ```
 
@@ -55,13 +55,10 @@ fourth postman/
 ### Steps
 
 ```bash
-# 1. Go to the server folder
-cd server
-
-# 2. Install dependencies
+# 1. Install dependencies
 npm install
 
-# 3. Start the server
+# 2. Start the server
 node index.js
 ```
 
@@ -76,18 +73,18 @@ http://localhost:5000
 
 ```
 Browser (UI)
-    │
-    │  POST /api/proxy  { url, method, headers, body }
-    ▼
+    |
+    |  POST /api/proxy  { url, method, headers, body }
+    v
 Express Server (localhost:5000)
-    │
-    │  axios(config)  ──► Target API
-    │                 ◄── Response
-    ▼
+    |
+    |  axios(config)  ---> Target API
+    |                 <--- Response
+    v
 Browser receives response (no CORS issues)
 ```
 
-The backend acts as a **reverse proxy** — the browser never directly calls the external API, so CORS restrictions don't apply.
+The backend acts as a **reverse proxy** — the browser never directly calls the external API, so CORS restrictions do not apply.
 
 ---
 
@@ -100,39 +97,39 @@ The backend acts as a **reverse proxy** — the browser never directly calls the
 4. Click **Send** or press `Ctrl+Enter`
 
 ### Environment Variables
-1. Click **Env** in the top navbar → create an environment
+1. Click **Env** in the top navbar to create an environment
 2. Add variables: `baseUrl = https://api.example.com`
 3. Use in URL: `{{baseUrl}}/users`
 
 ### Collections
 - Click **+** in Collections panel to create a collection
 - Click **Save** on any request to save it
-- Hover over a request → click **⋯** to rename, duplicate, or delete
+- Hover over a request and click the three dots to rename, duplicate, or delete
 
 ---
 
 ## Keyboard Shortcuts
 
-| Shortcut       | Action        |
-|----------------|---------------|
-| `Ctrl+Enter`   | Send request  |
-| `Ctrl+T`       | New tab       |
-| `Ctrl+W`       | Close tab     |
-| `Ctrl+S`       | Save request  |
-| `Ctrl+K`       | Focus URL bar |
-| `Esc`          | Close modals  |
+| Shortcut     | Action       |
+|--------------|--------------|
+| Ctrl+Enter   | Send request |
+| Ctrl+T       | New tab      |
+| Ctrl+W       | Close tab    |
+| Ctrl+S       | Save request |
+| Ctrl+K       | Focus URL    |
+| Esc          | Close modals |
 
 ---
 
 ## Sample Requests (Pre-loaded)
 
-The app comes with a **Demo Collection** using [JSONPlaceholder](https://jsonplaceholder.typicode.com) — a free public API:
+The app comes with a **Demo Collection** using [JSONPlaceholder](https://jsonplaceholder.typicode.com):
 
-| Name         | Method | URL                                              |
-|--------------|--------|--------------------------------------------------|
-| GET All Users| GET    | https://jsonplaceholder.typicode.com/users       |
-| POST Create  | POST   | https://jsonplaceholder.typicode.com/posts       |
-| DELETE Post  | DELETE | https://jsonplaceholder.typicode.com/posts/1     |
+| Name          | Method | URL                                          |
+|---------------|--------|----------------------------------------------|
+| GET All Users | GET    | https://jsonplaceholder.typicode.com/users   |
+| POST Create   | POST   | https://jsonplaceholder.typicode.com/posts   |
+| DELETE Post   | DELETE | https://jsonplaceholder.typicode.com/posts/1 |
 
 ---
 
