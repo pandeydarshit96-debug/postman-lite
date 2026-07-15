@@ -36,13 +36,13 @@ A lightweight, browser-based API testing platform — a simplified alternative t
 
 ```
 postman-lite/
-├── index.html        # Main UI
-├── style.css         # All styles
-├── app.js            # Frontend logic
-├── index.js          # Express proxy server (backend)
-├── package.json      # Backend dependencies
 ├── .gitignore
-└── README.md
+├── README.md
+├── app.js            # Frontend logic
+├── index.html        # Main UI
+├── index.js          # Express backend server
+├── package.json      # Backend dependencies
+└── style.css         # All styles
 ```
 
 ---
