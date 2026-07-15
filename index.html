@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Postman Lite</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<!-- ═══ TOP NAV ═══ -->
+<nav class="topnav">
+  <div class="nav-left">
+    <div class="logo"><i class="fa-solid fa-paper-plane"></i> Postman Lite</div>
+    <div class="search-bar">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search..."/>
+      <kbd>Ctrl+K</kbd>
+    </div>
+  </div>
+  <div class="nav-right">
+    <select id="envSelector" class="env-select-top"></select>
+    <button class="btn-ghost" onclick="openCreateEnv()" title="New Environment"><i class="fa-solid fa-sliders"></i> Env</button>
+  </div>
+</nav>
+
+<!-- ═══ BODY LAYOUT ═══ -->
+<div class="app-body">
+
+  <!-- LEFT ICON RAIL -->
+  <div class="icon-rail">
+    <button class="rail-btn active" title="Collections" onclick="showPanel('collections',this)"><i class="fa-solid fa-folder"></i></button>
+    <button class="rail-btn" title="Environments" onclick="showPanel('environments',this)"><i class="fa-solid fa-sliders"></i></button>
+    <button class="rail-btn" title="History" onclick="showPanel('history',this)"><i class="fa-solid fa-clock-rotate-left"></i></button>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div class="side-panel">
+
+    <!-- Collections -->
+    <div class="panel active" id="panel-collections">
+      <div class="panel-head">
+        <span>Collections</span>
+        <div>
+          <button class="icon-sm" title="New Collection" onclick="openNewCollection()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+      </div>
+      <div class="panel-search">
+        <input type="text" placeholder="Search collections..." oninput="filterCollections(this.value)"/>
+      </div>
+      <div class="collections-list" id="collectionsList"></div>
+    </div>
+
+    <!-- Environments -->
+    <div class="panel" id="panel-environments">
+      <div class="panel-head">
+        <span>Environments</span>
+        <button class="icon-sm" onclick="openCreateEnv()"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <div class="environments-list" id="envList"></div>
+    </div>
+
+    <!-- History -->
+    <div class="panel" id="panel-history">
+      <div class="panel-head">
+        <span>History</span>
+        <button class="icon-sm" onclick="clearHistory()" title="Clear"><i class="fa-solid fa-trash"></i></button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+  </div><!-- /side-panel -->
+
+  <!-- MAIN WORKSPACE -->
+  <div class="workspace">
+
+    <!-- TABS -->
+    <div class="tabs-bar">
+      <div class="tabs-list" id="tabsList"></div>
+      <button class="tab-new" onclick="addNewTab()" title="New Tab"><i class="fa-solid fa-plus"></i></button>
+    </div>
+
+    <!-- REQUEST AREA -->
+    <div class="request-area">
+
+      <!-- URL ROW -->
+      <div class="url-row">
+        <div class="method-wrap" onclick="toggleMethodDrop()">
+          <span id="methodLabel" class="method-badge get">GET</span>
+          <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--muted)"></i>
+          <div class="method-drop" id="methodDrop">
+            <div onclick="pickMethod('GET')"    class="mdrop-item get">GET</div>
+            <div onclick="pickMethod('POST')"   class="mdrop-item post">POST</div>
+            <div onclick="pickMethod('PUT')"    class="mdrop-item put">PUT</div>
+            <div onclick="pickMethod('PATCH')"  class="mdrop-item patch">PATCH</div>
+            <div onclick="pickMethod('DELETE')" class="mdrop-item delete">DELETE</div>
+            <div onclick="pickMethod('HEAD')"   class="mdrop-item head">HEAD</div>
+            <div onclick="pickMethod('QUERY')"  class="mdrop-item query">QUERY</div>
+          </div>
+        </div>
+        <input type="text" id="urlInput" class="url-input" placeholder="Enter URL  e.g. https://api.example.com/users"/>
+        <button class="btn-send" onclick="sendRequest()">
+          <span id="sendLabel">Send</span>
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+        <button class="btn-save" onclick="openSaveRequest()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+      </div>
+
+      <!-- REQUEST TABS -->
+      <div class="req-tabs-bar">
+        <div class="req-tabs-list">
+          <button class="req-tab active" onclick="switchReqTab('params',this)">Params <span class="badge" id="paramsBadge"></span></button>
+          <button class="req-tab" onclick="switchReqTab('auth',this)">Authorization</button>
+          <button class="req-tab" onclick="switchReqTab('headers',this)">Headers <span class="badge" id="headersBadge"></span></button>
+          <button class="req-tab" onclick="switchReqTab('body',this)">Body <span class="badge" id="bodyBadge"></span></button>
+          <button class="req-tab" onclick="switchReqTab('scripts',this)">Scripts</button>
+        </div>
+      </div>
+
+      <!-- PARAMS -->
+      <div class="req-panel active" id="rp-params">
+        <div class="kv-table">
+          <div class="kv-head"><span></span><span>Key</span><span>Value</span><span>Description</span><span></span></div>
+          <div id="paramsRows"></div>
+          <button class="add-row-btn" onclick="addParamRow()"><i class="fa-solid fa-plus"></i> Add Parameter</button>
+        </div>
+      </div>
+
+      <!-- AUTH -->
+      <div class="req-panel" id="rp-auth">
+        <div class="auth-wrap">
+          <div class="field-group">
+            <label>Auth Type</label>
+            <select class="field-select" id="authType" onchange="switchAuth(this.value)">
+              <option value="none">No Auth</option>
+              <option value="bearer">Bearer Token</option>
+              <option value="basic">Basic Auth</option>
+              <option value="apikey">API Key</option>
+            </select>
+          </div>
+          <div id="authFields"></div>
+        </div>
+      </div>
+
+      <!-- HEADERS -->
+      <div class="req-panel" id="rp-headers">
+        <div class="kv-table">
+          <div class="kv-head"><span></span><span>Key</span><span>Value</span><span>Description</span><span></span></div>
+          <div id="headersRows"></div>
+          <button class="add-row-btn" onclick="addHeaderRow()"><i class="fa-solid fa-plus"></i> Add Header</button>
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="req-panel" id="rp-body">
+        <div class="body-type-row">
+          <label><input type="radio" name="btype" value="none" checked onchange="switchBody('none')"/> none</label>
+          <label><input type="radio" name="btype" value="raw"       onchange="switchBody('raw')"/> raw</label>
+          <label><input type="radio" name="btype" value="form-data" onchange="switchBody('form-data')"/> form-data</label>
+          <label><input type="radio" name="btype" value="urlencoded" onchange="switchBody('urlencoded')"/> x-www-form-urlencoded</label>
+          <select id="rawFormat" class="raw-fmt-sel" style="display:none">
+            <option>JSON</option><option>Text</option><option>XML</option><option>HTML</option>
+          </select>
+        </div>
+        <div id="bodyContent"><div class="no-body">This request does not have a body</div></div>
+      </div>
+
+      <!-- SCRIPTS -->
+      <div class="req-panel" id="rp-scripts">
+        <div class="scripts-wrap">
+          <div class="script-tabs">
+            <button class="stab active" onclick="switchScript('pre',this)">Pre-request Script</button>
+            <button class="stab" onclick="switchScript('post',this)">Post-response</button>
+          </div>
+          <div id="sc-pre"><textarea class="script-area" placeholder="// pm.environment.set('key','value');"></textarea></div>
+          <div id="sc-post" style="display:none"><textarea class="script-area" placeholder="// pm.test('Status 200', ()=>{ pm.response.to.have.status(200); });"></textarea></div>
+        </div>
+      </div>
+
+    </div><!-- /request-area -->
+
+    <!-- RESPONSE AREA -->
+    <div class="response-area">
+
+      <div class="res-header-bar">
+        <div class="res-meta">
+          <span id="resStatus" class="status-chip"></span>
+          <span id="resTime"   class="meta-chip"></span>
+          <span id="resSize"   class="meta-chip"></span>
+        </div>
+        <div class="res-actions">
+          <button class="icon-sm" onclick="copyRes()" title="Copy"><i class="fa-solid fa-copy"></i></button>
+          <button class="icon-sm" onclick="downloadRes()" title="Download"><i class="fa-solid fa-download"></i></button>
+          <button class="icon-sm" onclick="clearRes()" title="Clear"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="res-tabs-bar">
+        <button class="res-tab active" onclick="switchResTab('body',this)">Body</button>
+        <button class="res-tab" onclick="switchResTab('headers',this)">Headers</button>
+        <button class="res-tab" onclick="switchResTab('cookies',this)">Cookies</button>
+        <button class="res-tab" onclick="switchResTab('timeline',this)">Timeline</button>
+        <div class="res-view-opts" id="resViewOpts">
+          <div class="view-group">
+            <button class="vbtn active" onclick="switchView('pretty',this)">Pretty</button>
+            <button class="vbtn" onclick="switchView('raw',this)">Raw</button>
+            <button class="vbtn" onclick="switchView('preview',this)">Preview</button>
+          </div>
+          <select class="lang-sel" id="langSel"><option>JSON</option><option>HTML</option><option>XML</option><option>Text</option></select>
+        </div>
+      </div>
+
+      <div class="res-body-wrap">
+        <!-- Body tab -->
+        <div class="res-panel active" id="resp-body">
+          <div class="res-placeholder" id="resPlaceholder">
+            <i class="fa-solid fa-paper-plane"></i>
+            <p>Send a request to see the response here</p>
+          </div>
+          <pre class="res-body-text" id="resBodyText" style="display:none"></pre>
+          <div class="res-preview" id="resPreview" style="display:none">
+            <iframe id="previewFrame" sandbox="allow-same-origin"></iframe>
+          </div>
+        </div>
+        <!-- Headers tab -->
+        <div class="res-panel" id="resp-headers">
+          <div class="res-headers-list" id="resHeadersList"></div>
+        </div>
+        <!-- Cookies tab -->
+        <div class="res-panel" id="resp-cookies">
+          <div class="res-placeholder"><i class="fa-solid fa-cookie"></i><p>No cookies</p></div>
+        </div>
+        <!-- Timeline tab -->
+        <div class="res-panel" id="resp-timeline">
+          <div class="timeline-list" id="timelineList"></div>
+        </div>
+      </div>
+
+    </div><!-- /response-area -->
+
+  </div><!-- /workspace -->
+</div><!-- /app-body -->
+
+<!-- MODAL: New Collection -->
+<div class="modal-bg" id="modal-collection">
+  <div class="modal">
+    <div class="modal-head"><h3>New Collection</h3><button onclick="closeModal('modal-collection')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <label>Name</label>
+      <input type="text" id="col-name-inp" class="field-input" placeholder="My Collection"/>
+      <label>Description</label>
+      <textarea id="col-desc-inp" class="field-textarea" placeholder="Optional description..."></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-collection')">Cancel</button>
+      <button class="btn-primary" onclick="confirmNewCollection()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Save Request -->
+<div class="modal-bg" id="modal-save">
+  <div class="modal">
+    <div class="modal-head"><h3>Save Request</h3><button onclick="closeModal('modal-save')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <label>Request Name</label>
+      <input type="text" id="save-name-inp" class="field-input" placeholder="My Request"/>
+      <label>Save to Collection</label>
+      <select id="save-col-sel" class="field-select"></select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-save')">Cancel</button>
+      <button class="btn-primary" onclick="confirmSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Environment Editor -->
+<div class="modal-bg" id="modal-env">
+  <div class="modal" style="width:560px">
+    <div class="modal-head"><h3 id="envModalTitle">New Environment</h3><button onclick="closeModal('modal-env')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <label>Name</label>
+      <input type="text" id="env-name-inp" class="field-input" placeholder="e.g. Development"/>
+      <label style="margin-top:4px">Variables</label>
+      <div class="kv-head" style="grid-template-columns:24px 1fr 1fr 28px;margin-top:4px"><span></span><span>Variable</span><span>Value</span><span></span></div>
+      <div id="envVarRows"></div>
+      <button class="add-row-btn" onclick="addEnvVarRow()"><i class="fa-solid fa-plus"></i> Add Variable</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-env')">Cancel</button>
+      <button class="btn-primary" onclick="confirmEnv()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirm -->
+<div class="modal-bg" id="modal-confirm">
+  <div class="modal" style="width:380px">
+    <div class="modal-head"><h3 id="confirm-title">Confirm</h3><button onclick="closeModal('modal-confirm')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><p id="confirm-msg" style="color:var(--text2);font-size:13px;line-height:1.6"></p></div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-confirm')">Cancel</button>
+      <button class="btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Rename -->
+<div class="modal-bg" id="modal-rename">
+  <div class="modal" style="width:380px">
+    <div class="modal-head"><h3>Rename</h3><button onclick="closeModal('modal-rename')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <label>Name</label>
+      <input type="text" id="rename-inp" class="field-input" placeholder="Enter name..."/>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-rename')">Cancel</button>
+      <button class="btn-primary" id="rename-ok-btn">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
